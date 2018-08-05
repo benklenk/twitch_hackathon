@@ -224,6 +224,13 @@ class AppContainer extends React.Component {
     this.setState({playFromPosition: this.state.playFromPosition-=1000*10});
   }
 
+  next() {
+    this.handleSongFinished();
+  }
+
+  previous() {
+
+  }
   enqueue(trackId) {
     var tracks = this.state.tracks.concat(trackId)
     this.setState({
@@ -255,6 +262,8 @@ class AppContainer extends React.Component {
           playStatus={this.state.playStatus}
           forward={this.forward.bind(this)}
           backward={this.backward.bind(this)}
+          previous={this.previous.bind(this)}
+          next={this.previous.bind(this)}
           random={this.getTrack.bind(this)}
         />
         <Progress

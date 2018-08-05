@@ -32,6 +32,7 @@ class Player extends React.Component {
         {/*Forward Button*/}
         <div className="player__forward">
           <button onClick={this.props.forward}><i className="fa fa-forward"></i></button>
+          <button onClick={this.props.next}><i className="fa fa-step-forward"></i></button>
         </div>
       </div>
     )
