@@ -1,9 +1,9 @@
 import React from 'react';
-import Sound from 'react-sound'
 import Search from './Search'
 import Info from './Info'
 import Player from './Player'
 import Progress from './Progress'
+import Sound from 'react-sound'
 var parser = new DOMParser()
 
 // AppContainer class
@@ -27,10 +27,16 @@ class AppContainer extends React.Component {
   // MUSIC PLAYER
   // how to handle position of song
   handleSongPlaying(audio) {
+    console.log(audio,'d')
+    let elapsed = this.formatMilliseconds(audio.position)
+    let total = this.formatMilliseconds(audio.duration)
+    let position = audio.position / audio.duration
+    console.log(elapsed,total,position)
+
     this.setState({
-      elapsed: this.formatMilliseconds(audio.position),
-      total: this.formatMilliseconds(audio.duration),
-      position: audio.position / audio.duration
+      elapsed: elapsed,
+      total: total,
+      position: position
     })
   }
 
@@ -92,7 +98,6 @@ class AppContainer extends React.Component {
 
   // need to add fetch request and set the state equal to the result
   getTrack () {
-    let _this = this;
     var doc;
     fetch('http://api.7digital.com/1.2/artist/toptracks?shopId=2020&oauth_consumer_key=7d4vr6cgb392&artistId=1448&usageTypes=adsupportedstreaming', {
       method: 'GET',
@@ -103,6 +108,7 @@ class AppContainer extends React.Component {
     })
     .then(res => res.json())
     .then(json => {
+      console.log('got track')
       var id = json.tracks.track[5].id;
       var title = json.tracks.track[5].title;
       console.log(id)
@@ -114,6 +120,7 @@ class AppContainer extends React.Component {
 
   // changes state based on event trigger
   togglePlay(){
+
     // Check current playing state
     if(this.state.playStatus === Sound.status.PLAYING){
       // Pause if playing
