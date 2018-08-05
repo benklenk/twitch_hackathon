@@ -288,7 +288,6 @@ class AppContainer extends React.Component {
         <Info
           artist={this.state.track.artist}
           title={this.state.track.title}
-          artist={this.state.track.artist}
         />
         <Player
           togglePlay={this.togglePlay.bind(this)}
@@ -297,7 +296,7 @@ class AppContainer extends React.Component {
           forward={this.forward.bind(this)}
           backward={this.backward.bind(this)}
           previous={this.previous.bind(this)}
-          next={this.previous.bind(this)}
+          next={this.next.bind(this)}
           random={this.getTrack.bind(this)}
         />
         <Progress
