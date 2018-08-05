@@ -6,6 +6,7 @@ import Player from './Player'
 import Progress from './Progress'
 //import OAuth from './oauth'
 import oauthSignature from 'oauth-signature'
+// import queue from 'queue'
 //import ui from './ui'
 //import oauth from './oauth'
 var consumerKey = "7d4vr6cgb392"
@@ -14,6 +15,9 @@ var signatureMethod = "HMAC-SHA1"
 var oauthVersion = "1.0"
 var shopId = "2020"
 var streamURL = "https://stream.svc.7digital.net/stream/catalogue"
+var apiURL = "http://api.7digital.com/1.2"
+var searchType = "/track/search"
+var urlKeys = "?shopId=2020&oauth_consumer_key=7d4vr6cgb392&"
 var fields = {shopId: "2020", trackId: ""}
 
 // AppContainer class
@@ -31,7 +35,8 @@ class AppContainer extends React.Component {
       position: 0,
       playFromPosition: 0,
       autoCompleteValue: '',
-      tracks: []
+      tracks: [],
+      search: []
     }
   }
   // MUSIC PLAYER
@@ -59,18 +64,19 @@ class AppContainer extends React.Component {
   // SEARCH BOX
   // handle search selection NEED TO CHANGE
   handleSelect(value, item){
-    this.setState({ autoCompleteValue: value, track: item });
+    console.log(item)
+    this.setState({ autoCompleteValue: value});
+    this.getTrack(item)
   }
 
   // handle input box change NEED TO CHANGE
   handleChange(event, value) {
-    Update input box
+    let search = []
     this.setState({autoCompleteValue: event.target.value});
     let _this = this;
-
     //Search for song with entered value
-    var trackUrl = "http://api.7digital.com/1.2/artist/toptracks?shopId=2020&oauth_consumer_key=7d4vr6cgb392&artistId=" +  id "&usageTypes=adsupportedstreaming"
-    fetch(url, {
+    var trackUrl = apiURL + searchType + urlKeys + "q=" + value + "&usageTypes=adsupportedstreaming"
+    fetch(trackUrl, {
       method: 'GET',
       mode: 'cors',
       headers: {
@@ -79,8 +85,35 @@ class AppContainer extends React.Component {
     })
     .then(res => res.json())
     .then(json => {
-      var trackId = json.tracks.track[5].id;
-      var title = json.tracks.track[5].title;
+      if (json.searchResults && json.searchResults.totalItems > 0) {
+        if (json.searchResults.totalItems < 5) {
+          for (let i = 0; i < json.searchResults.totalItems; i++) {
+            console.log(i)
+            var trackId = json.searchResults.searchResult[i].track.id;
+            var title = json.searchResults.searchResult[i].track.title;
+            search = search.concat({title: title, id: trackId})
+          }
+          console.log(search)
+          this.setState({
+            search: search
+          }, console.log(this.state.search))
+        } else {
+          for (let i = 0; i < 5; i++) {
+            console.log(i)
+            var trackId = json.searchResults.searchResult[i].track.id;
+            var title = json.searchResults.searchResult[i].track.title;
+            search = search.concat({title: title, id: trackId})
+          }
+          console.log(search)
+          this.setState({
+            search: search
+          })
+        }
+      } else {
+        this.setState({
+          search: search
+        })
+      }
     })
   }
 
@@ -128,31 +161,37 @@ class AppContainer extends React.Component {
         shopId: '2020',
         trackId: trackId.toString()
     }
-    console.log(parameters.oauth_nonce)
-    console.log(parameters.oauth_timestamp)
+    //console.log(parameters.oauth_nonce)
+    //console.log(parameters.oauth_timestamp)
     var preppedURL = streamURL + "?oauth_consumer_key=" + consumerKey + "&oauth_nonce=" + parameters.oauth_nonce + "&oauth_signature_method=HMAC-SHA1&oauth_timestamp=" + parameters.oauth_timestamp + "&oauth_version=1.0&shopId=2020&trackId=" + trackId;
     var signature = oauthSignature.generate("GET", streamURL, parameters, consumerSecret)
     return preppedURL + '&oauth_signature=' + signature.toString();
   }
   // need to add fetch request and set the state equal to the result
-  getTrack (id) {
+  getTrack (track) {
     //console.log(signature.queryString)
-    var trackUrl = "http://api.7digital.com/1.2/artist/toptracks?shopId=2020&oauth_consumer_key=7d4vr6cgb392&artistId=" +  id "&usageTypes=adsupportedstreaming"
-    fetch(url, {
-      method: 'GET',
-      mode: 'cors',
-      headers: {
-        accept: 'application/json'
-      }
-    })
-    .then(res => res.json())
-    .then(json => {
-      var trackId = json.tracks.track[5].id;
-      var title = json.tracks.track[5].title;
-      var url = this.prepareOauthUrl(id)
-      this.setState({
-        track: {stream_url: url, title: title, artwork_url: '', id: id}
-      })
+    //
+    // var trackUrl = "http://api.7digital.com/1.2/artist/toptracks?shopId=2020&oauth_consumer_key=7d4vr6cgb392&artistId=" +  track.id + "&usageTypes=adsupportedstreaming"
+    // fetch(trackUrl, {
+    //   method: 'GET',
+    //   mode: 'cors',
+    //   headers: {
+    //     accept: 'application/json'
+    //   }
+    // })
+    // .then(res => res.json())
+    // .then(json => {
+    //   var trackId = json.tracks.track[5].id;
+    //   var title = json.tracks.track[5].title;
+    //   var url = this.prepareOauthUrl(id)
+    //   this.setState({
+    //     track: {stream_url: url, title: title, artwork_url: '', id: id}
+    //   })
+    // })
+    var url = this.prepareOauthUrl(track.id)
+
+    this.setState({
+      track: {stream_url: url, title: track.title, artwork_url: '', id: track.id}
     })
   }
 
@@ -184,10 +223,16 @@ class AppContainer extends React.Component {
     this.setState({playFromPosition: this.state.playFromPosition-=1000*10});
   }
 
-  // componentDidMount lifecycle method. Called once a component is loaded
-  componentDidMount() {
-    this.getTrack();
+  enqueue(trackId) {
+    var tracks = this.state.tracks.concat(trackId)
+    this.setState({
+      tracks: tracks
+    })
   }
+  // componentDidMount lifecycle method. Called once a component is loaded
+  // componentDidMount() {
+  //   this.getTrack();
+  // }
 
   // Render method
   render () {
@@ -195,7 +240,7 @@ class AppContainer extends React.Component {
       <div className="turntable">
         <Search
           autoCompleteValue={this.state.autoCompleteValue}
-          tracks={this.state.tracks}
+          tracks={this.state.search}
           handleSelect={this.handleSelect.bind(this)}
           handleChange={this.handleChange.bind(this)}
         />
