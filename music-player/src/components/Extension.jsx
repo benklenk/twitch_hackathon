@@ -154,9 +154,11 @@ class Extension extends React.Component {
   }
 
   componentDidMount() {
+    console.log('mounted')
     fetch('https://81139028.ngrok.io/getqueue')
     .then(res=>res.json())
     .then((json) => {
+      console.log(json)
       var queue = json.map((song) => {
         return {title: song.title, id: song.id, artist: song.artist, album_art: song.album_art}
       })

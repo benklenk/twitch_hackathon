@@ -24,7 +24,7 @@ class AppContainer extends React.Component {
     super(props);
     this.state = {
       // What ever is returned, we just need these 3 values
-      track: {stream_url: '', artist: '', title: '', artwork_url: '', id:''},
+      track: {stream_url: '', artist: '', title: '', album_art: '', id:''},
       playStatus: Sound.status.STOPPED,
       elapsed: '00:00',
       total: '00:00',
@@ -62,8 +62,9 @@ class AppContainer extends React.Component {
       })
       var tracks = queue.slice(1)
       this.setState({
-        tracks: tracks
+        tracks: tracks,
       })
+      fetch('https://81139028.ngrok.io/remove')
     })
     if (this.state.tracks.length > 0) {
       this.getTrack(this.state.tracks[0])
@@ -185,7 +186,7 @@ class AppContainer extends React.Component {
     var url = this.prepareOauthUrl(track.id)
 
     this.setState({
-      track: {stream_url: url, title: track.title, artwork_url: track.album_art, id: track.id, artist: track.artist},
+      track: {stream_url: url, title: track.title, album_art: track.album_art, id: track.id, artist: track.artist},
     })
   }
 
@@ -221,8 +222,23 @@ class AppContainer extends React.Component {
     this.handleSongFinished();
   }
 
-  previous() {
+  previous () {}
 
+  componentDidMount() {
+    setInterval(() => {
+      fetch('https://81139028.ngrok.io/getqueue')
+      .then(res=>res.json())
+      .then((json) => {
+        console.log(json)
+        var queue = json.map((song) => {
+          return {title: song.title, id: song.id, artist: song.artist, album_art: song.album_art}
+        })
+        console.log(queue)
+        this.setState({
+          tracks: queue
+        })
+      })
+    }, 1000 * 5)
   }
 
   enqueue(item) {
@@ -267,13 +283,13 @@ class AppContainer extends React.Component {
 
   // Render method
   render () {
-    const albumArt = {
+    var albumArt = {
       width: '700px',
       height: '700px',
       backgroundImage: `linear-gradient(
         rgba(0, 0, 0, 0.7),
         rgba(0, 0, 0, 0.7)
-      ), url(${this.enlarge(this.state.track.artwork_url)})`
+      ), url(${this.enlarge(this.state.track.album_art)})`
     }
     return (
       <div className="turntable" style={albumArt}>
