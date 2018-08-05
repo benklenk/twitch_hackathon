@@ -28,7 +28,7 @@ class AppContainer extends React.Component {
     this.client_id = ''
     this.state = {
       // What ever is returned, we just need these 3 values
-      track: {stream_url: '', title: '', artwork_url: '', id:''},
+      track: {stream_url: '', artist: '', title: '', artwork_url: '', id:''},
       playStatus: Sound.status.STOPPED,
       elapsed: '00:00',
       total: '00:00',
@@ -278,6 +278,7 @@ class AppContainer extends React.Component {
           handleChange={this.handleChange.bind(this)}
         />
         <Info
+          artist={this.state.track.artist}
           title={this.state.track.title}
           artist={this.state.track.artist}
         />
