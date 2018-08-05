@@ -28,7 +28,7 @@ class AppContainer extends React.Component {
     this.client_id = ''
     this.state = {
       // What ever is returned, we just need these 3 values
-      track: {stream_url: '', title: '', artwork_url: '', id:''},
+      track: {stream_url: '', artist: '', title: '', artwork_url: '', id:''},
       playStatus: Sound.status.STOPPED,
       elapsed: '00:00',
       total: '00:00',
@@ -102,7 +102,8 @@ class AppContainer extends React.Component {
             console.log(i)
             var trackId = json.searchResults.searchResult[i].track.id;
             var title = json.searchResults.searchResult[i].track.title;
-            search = search.concat({title: title, id: trackId})
+            var artist = json.searchResults.searchResult[i].track.artist;
+            search = search.concat({artist: artist.name, title: title, id: trackId})
           }
           console.log(search)
           this.setState({
@@ -191,7 +192,7 @@ class AppContainer extends React.Component {
     var url = this.prepareOauthUrl(track.id)
 
     this.setState({
-      track: {stream_url: url, title: track.title, artwork_url: '', id: track.id}
+      track: {stream_url: url, artist: track.artist, title: track.title, artwork_url: '', id: track.id}
     })
   }
 
@@ -245,6 +246,7 @@ class AppContainer extends React.Component {
           handleChange={this.handleChange.bind(this)}
         />
         <Info
+          artist={this.state.track.artist}
           title={this.state.track.title}
         />
         <Player
