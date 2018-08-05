@@ -1,10 +1,20 @@
 import React from 'react';
+import Sound from 'react-sound';
 import Search from './Search'
 import Info from './Info'
 import Player from './Player'
 import Progress from './Progress'
-import Sound from 'react-sound'
-var parser = new DOMParser()
+//import OAuth from './oauth'
+import oauthSignature from 'oauth-signature'
+//import ui from './ui'
+//import oauth from './oauth'
+var consumerKey = "7d4vr6cgb392"
+var consumerSecret = 'm4ntskavq56rddsa'
+var signatureMethod = "HMAC-SHA1"
+var oauthVersion = "1.0"
+var shopId = "2020"
+var streamURL = "https://stream.svc.7digital.net/stream/catalogue"
+var fields = {shopId: "2020", trackId: ""}
 
 // AppContainer class
 class AppContainer extends React.Component {
@@ -54,20 +64,24 @@ class AppContainer extends React.Component {
 
   // handle input box change NEED TO CHANGE
   handleChange(event, value) {
-    // Update input box
-    // this.setState({autoCompleteValue: event.target.value});
-    // let _this = this;
-    //
-    // //Search for song with entered value
-    // Axios.get(`https://api.soundcloud.com/tracks?client_id=${this.client_id}&q=${value}`)
-    //   .then(function (response) {
-    //     // Update track state
-    //     _this.setState({tracks: response.data});
-    //   })
-    //   .catch(function (err) {
-    //     console.log(err);
-    //   });
-    console.log('change')
+    Update input box
+    this.setState({autoCompleteValue: event.target.value});
+    let _this = this;
+
+    //Search for song with entered value
+    var trackUrl = "http://api.7digital.com/1.2/artist/toptracks?shopId=2020&oauth_consumer_key=7d4vr6cgb392&artistId=" +  id "&usageTypes=adsupportedstreaming"
+    fetch(url, {
+      method: 'GET',
+      mode: 'cors',
+      headers: {
+        accept: 'application/json'
+      }
+    })
+    .then(res => res.json())
+    .then(json => {
+      var trackId = json.tracks.track[5].id;
+      var title = json.tracks.track[5].title;
+    })
   }
 
   // MORE SOUND STUFF
@@ -96,10 +110,35 @@ class AppContainer extends React.Component {
       return `${url}?client_id=${this.client_id}`
   }
 
+  prepareOauthUrl(trackId) {
+    var randomString = function(length) {
+        var text = "";
+        var possible = "0123456789";
+        for(var i = 0; i < length; i++) {
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+        return text;
+    }
+    var parameters = {
+        oauth_consumer_key: consumerKey,
+        oauth_nonce: randomString(9),
+        oauth_timestamp: Math.floor((new Date()).getTime() / 1000),
+        oauth_signature_method: "HMAC-SHA1",
+        oauth_version: '1.0',
+        shopId: '2020',
+        trackId: trackId.toString()
+    }
+    console.log(parameters.oauth_nonce)
+    console.log(parameters.oauth_timestamp)
+    var preppedURL = streamURL + "?oauth_consumer_key=" + consumerKey + "&oauth_nonce=" + parameters.oauth_nonce + "&oauth_signature_method=HMAC-SHA1&oauth_timestamp=" + parameters.oauth_timestamp + "&oauth_version=1.0&shopId=2020&trackId=" + trackId;
+    var signature = oauthSignature.generate("GET", streamURL, parameters, consumerSecret)
+    return preppedURL + '&oauth_signature=' + signature.toString();
+  }
   // need to add fetch request and set the state equal to the result
-  getTrack () {
-    var doc;
-    fetch('http://api.7digital.com/1.2/artist/toptracks?shopId=2020&oauth_consumer_key=7d4vr6cgb392&artistId=1448&usageTypes=adsupportedstreaming', {
+  getTrack (id) {
+    //console.log(signature.queryString)
+    var trackUrl = "http://api.7digital.com/1.2/artist/toptracks?shopId=2020&oauth_consumer_key=7d4vr6cgb392&artistId=" +  id "&usageTypes=adsupportedstreaming"
+    fetch(url, {
       method: 'GET',
       mode: 'cors',
       headers: {
@@ -108,12 +147,11 @@ class AppContainer extends React.Component {
     })
     .then(res => res.json())
     .then(json => {
-      console.log('got track')
-      var id = json.tracks.track[5].id;
+      var trackId = json.tracks.track[5].id;
       var title = json.tracks.track[5].title;
-      console.log(id)
+      var url = this.prepareOauthUrl(id)
       this.setState({
-        track: {stream_url: 'https://stream.svc.7digital.net/stream/catalogue?oauth_consumer_key=7d4vr6cgb392&oauth_nonce=252196489&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1533443238&oauth_version=1.0&shopid=2020&trackid=792983&oauth_signature=Fgc2PW3t2xMSwWyj24PBsFNwNM4%3D', title: title, artwork_url: '', id: id}
+        track: {stream_url: url, title: title, artwork_url: '', id: id}
       })
     })
   }
