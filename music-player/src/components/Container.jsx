@@ -36,7 +36,7 @@ class AppContainer extends React.Component {
       playFromPosition: 0,
       autoCompleteValue: '',
       tracks: [],
-      search: []
+      search: [],
     }
   }
   // MUSIC PLAYER
@@ -56,9 +56,16 @@ class AppContainer extends React.Component {
   }
 
   handleSongFinished () {
-    // Call random Track
-    // this.randomTrack();
-    console.log('finished')
+    var tracks = this.state.tracks.slice(1)
+    console.log(tracks)
+    this.setState({
+      tracks: tracks,
+    })
+    if (this.state.tracks.length > 0) {
+      this.getTrack(this.state.tracks[0])
+    } else {
+      this.stop()
+    }
   }
 
   // SEARCH BOX
@@ -66,7 +73,11 @@ class AppContainer extends React.Component {
   handleSelect(value, item){
     console.log(item)
     this.setState({ autoCompleteValue: value});
-    this.getTrack(item)
+    this.enqueue(item)
+    console.log(this.state.tracks)
+    if (this.state.tracks.length === 0) {
+      this.getTrack(item)
+    }
   }
 
   // handle input box change NEED TO CHANGE
@@ -85,25 +96,29 @@ class AppContainer extends React.Component {
     })
     .then(res => res.json())
     .then(json => {
+      console.log(json.searchResults)
       if (json.searchResults && json.searchResults.totalItems > 0) {
         if (json.searchResults.totalItems < 5) {
           for (let i = 0; i < json.searchResults.totalItems; i++) {
             console.log(i)
             var trackId = json.searchResults.searchResult[i].track.id;
             var title = json.searchResults.searchResult[i].track.title;
-            search = search.concat({title: title, id: trackId})
+            var artist = json.searchResults.searchResult[i].track.artist;
+            var art = json.searchResults.searchResult[i].track.release.image;
+            search = search.concat({title: title, id: trackId, artist: artist.name, album_art: art})
           }
           console.log(search)
           this.setState({
             search: search
-          }, console.log(this.state.search))
+          })
         } else {
           for (let i = 0; i < 5; i++) {
             console.log(i)
             var trackId = json.searchResults.searchResult[i].track.id;
             var title = json.searchResults.searchResult[i].track.title;
             var artist = json.searchResults.searchResult[i].track.artist;
-            search = search.concat({artist: artist.name, title: title, id: trackId})
+            var art = json.searchResults.searchResult[i].track.release.image;
+            search = search.concat({title: title, id: trackId, artist: artist.name, album_art: art})
           }
           console.log(search)
           this.setState({
@@ -192,7 +207,7 @@ class AppContainer extends React.Component {
     var url = this.prepareOauthUrl(track.id)
 
     this.setState({
-      track: {stream_url: url, artist: track.artist, title: track.title, artwork_url: '', id: track.id}
+      track: {stream_url: url, title: track.title, artwork_url: track.album_art, id: track.id, artist: track.artist},
     })
   }
 
@@ -231,21 +246,39 @@ class AppContainer extends React.Component {
   previous() {
 
   }
-  enqueue(trackId) {
-    var tracks = this.state.tracks.concat(trackId)
+
+  enqueue(item) {
+    var tracks = this.state.tracks.concat(item)
     this.setState({
       tracks: tracks
     })
+    console.log(this.state.tracks)
   }
   // componentDidMount lifecycle method. Called once a component is loaded
   // componentDidMount() {
   //   this.getTrack();
   // }
 
+  enlarge(url){
+    var arr = url.split('_');
+    console.log(arr)
+    var enlarged = arr[0] + '_350.jpg'
+    console.log(enlarged)
+    return enlarged
+  }
+
   // Render method
   render () {
+    const albumArt = {
+      width: '700px',
+      height: '700px',
+      backgroundImage: `linear-gradient(
+        rgba(0, 0, 0, 0.7),
+        rgba(0, 0, 0, 0.7)
+      ), url(${this.enlarge(this.state.track.artwork_url)})`
+    }
     return (
-      <div className="turntable">
+      <div className="turntable" style={albumArt}>
         <Search
           autoCompleteValue={this.state.autoCompleteValue}
           tracks={this.state.search}
@@ -255,6 +288,7 @@ class AppContainer extends React.Component {
         <Info
           artist={this.state.track.artist}
           title={this.state.track.title}
+          artist={this.state.track.artist}
         />
         <Player
           togglePlay={this.togglePlay.bind(this)}
