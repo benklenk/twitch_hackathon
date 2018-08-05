@@ -4,6 +4,9 @@ import Search from './Search'
 import Info from './Info'
 import Player from './Player'
 import Progress from './Progress'
+//import ui from './ui'
+//import oauth from './oauth'
+
 var parser = new DOMParser()
 
 // AppContainer class
@@ -92,8 +95,8 @@ class AppContainer extends React.Component {
 
   // need to add fetch request and set the state equal to the result
   getTrack () {
-    let _this = this;
     var doc;
+    //console.log(signature.queryString)
     fetch('http://api.7digital.com/1.2/artist/toptracks?shopId=2020&oauth_consumer_key=7d4vr6cgb392&artistId=1448&usageTypes=adsupportedstreaming', {
       method: 'GET',
       mode: 'cors',
