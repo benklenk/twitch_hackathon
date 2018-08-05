@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom';
 
 //Import Container component
 import AppContainer from './components/Container'
+import Extension from './components/Extension'
 
 class App extends React.Component {
   render () {
